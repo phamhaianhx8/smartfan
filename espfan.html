@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Smart Fan - Liquid Glass</title>
+  <style>
+    :root {
+      --liquid-1: #00f2fe;
+      --liquid-2: #4facfe;
+      --liquid-3: #fa709a;
+      --liquid-4: #fee140;
+      --text: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.65);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      background-color: #080c14;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Hiệu ứng giọt lỏng trôi ngầm phía sau (Liquid Blobs) */
+    .blob {
+      position: fixed;
+      filter: blur(70px);
+      z-index: 0;
+      opacity: 0.6;
+      border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+      animation: morph 9s linear infinite alternate, float 15s ease-in-out infinite;
+    }
+    .blob-1 {
+      width: 280px; height: 280px;
+      background: linear-gradient(135deg, var(--liquid-1), var(--liquid-2));
+      top: 5%; left: 10%;
+    }
+    .blob-2 {
+      width: 250px; height: 250px;
+      background: linear-gradient(135deg, var(--liquid-3), var(--liquid-4));
+      bottom: 10%; right: 5%;
+      animation-duration: 8s, 12s;
+    }
+    @keyframes morph {
+      0% { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; }
+      50% { border-radius: 70% 30% 46% 54% / 30% 29% 71% 70%; }
+      100% { border-radius: 38% 62% 35% 65% / 60% 50% 50% 40%; }
+    }
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(40px) rotate(180deg); }
+      100% { transform: translateY(0) rotate(360deg); }
+    }
+
+    /* Khung ứng dụng dạng Kính Lỏng (Liquid Glassmorphism) */
+    .glass-app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(30px) saturate(190%);
+      -webkit-backdrop-filter: blur(30px) saturate(190%);
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-top: 1.5px solid rgba(255, 255, 255, 0.4);
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 
+                  inset 0 0 20px rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header & Bluetooth Connect */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(120deg, #ffffff, #a5b4fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .btn-ble {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 14px;
+      border-radius: 20px;
+      color: var(--text);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-ble.connected {
+      background: rgba(0, 242, 254, 0.15);
+      border-color: rgba(0, 242, 254, 0.5);
+      color: #00f2fe;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #ff4757;
+      transition: 0.3s;
+    }
+    .btn-ble.connected .status-dot {
+      background: #00f2fe;
+      box-shadow: 0 0 8px #00f2fe;
+    }
+
+    /* Hiển thị Metric & Quạt */
+    .hero-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .fan-stage {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .fan-svg {
+      width: 85px; height: 85px;
+      fill: url(#fanGrad);
+      filter: drop-shadow(0 0 12px rgba(0, 242, 254, 0.5));
+      animation: spin 2s linear infinite;
+      animation-play-state: paused;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    .readouts {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: right;
+    }
+    .readout-item .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .readout-item .val { font-size: 1.8rem; font-weight: 800; line-height: 1.1; }
+    .val.temp {
+      background: linear-gradient(135deg, #ff9a44, #fc6076);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .val.speed {
+      background: linear-gradient(135deg, #00f2fe, #4facfe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Segment Mode Switch */
+    .mode-switch {
+      display: flex;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 18px;
+      padding: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+    .mode-tab.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.3);
+    }
+
+    /* Khối điều khiển Card */
+    .controls-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 18px;
+    }
+    .slider-box { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .slider-box:last-child { margin-bottom: 0; }
+    .slider-info { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 500; }
+    .slider-val { color: #00f2fe; font-weight: 700; }
+
+    /* Thanh trượt thẩm mỹ Kính */
+    input[type=range] {
+      width: 100%;
+      height: 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+      -webkit-appearance: none;
+      backdrop-filter: blur(5px);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 15px #00f2fe, 0 2px 6px rgba(0,0,0,0.4);
+      cursor: pointer;
+      border: 2px solid #00f2fe;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- 2 giọt chất lỏng trôi ngầm -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="glass-app">
+    <!-- Header -->
+    <div class="header">
+      <h1>SMART FAN</h1>
+      <button class="btn-ble" id="bleBtn" onclick="toggleBLE()">
+        <div class="status-dot" id="bleDot"></div>
+        <span id="bleText">Kết nối</span>
+      </button>
+    </div>
+
+    <!-- Màn hình chính & Quạt xoay -->
+    <div class="hero-panel">
+      <div class="fan-stage">
+        <svg class="fan-svg" id="fanRotor" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="fanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00f2fe"/>
+              <stop offset="100%" stop-color="#4facfe"/>
+            </linearGradient>
+          </defs>
+          <!-- Cánh quạt 4 lá -->
+          <circle cx="50" cy="50" r="12"/>
+          <path d="M50 38 C42 20, 22 24, 38 42 Z"/>
+          <path d="M62 50 C80 42, 76 22, 58 38 Z"/>
+          <path d="M50 62 C58 80, 78 76, 62 58 Z"/>
+          <path d="M38 50 C20 58, 24 78, 42 62 Z"/>
+        </svg>
+      </div>
+
+      <div class="readouts">
+        <div class="readout-item">
+          <div class="label">Nhiệt độ LM35</div>
+          <div class="val temp"><span id="tempVal">--</span><span style="font-size:1.1rem">°C</span></div>
+        </div>
+        <div class="readout-item">
+          <div class="label">Công suất quạt</div>
+          <div class="val speed"><span id="speedVal">--</span><span style="font-size:1.1rem">%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chọn chế độ Tự Động / Thủ Công -->
+    <div class="mode-switch">
+      <button class="mode-tab active" id="tabAuto" onclick="switchMode(true)">Tự Động</button>
+      <button class="mode-tab" id="tabMan" onclick="switchMode(false)">Thủ Công</button>
+    </div>
+
+    <!-- Panel Tự Động: Tinh chỉnh đường cong nhiệt độ -->
+    <div class="controls-card" id="autoControls">
+      <div class="slider-box">
+        <div class="slider-info">
+          <span style="color:var(--text-muted)">Nhiệt độ bắt đầu tăng (Min)</span>
+          <span class="slider-val" id="minDisplay">37°C</span>
+        </div>
+        <input type="range" id="sliderMin" min="20" max="60" value="37" oninput="onCurveChange()">
+      </div>
+
+      <div class="slider-box">
+        <div class="slider-info">
+          <span style="color:var(--text-muted)">Nhiệt độ đạt tối đa 100% (Max)</span>
+          <span class="slider-val" id="maxDisplay">45°C</span>
+        </div>
+        <input type="range" id="sliderMax" min="25" max="80" value="45" oninput="onCurveChange()">
+      </div>
+    </div>
+
+    <!-- Panel Thủ Công: Kéo thanh trượt tốc độ -->
+    <div class="controls-card hidden" id="manualControls">
+      <div class="slider-box">
+        <div class="slider-info">
+          <span style="color:var(--text-muted)">Công suất quạt mong muốn</span>
+          <span class="slider-val" id="manDisplay">50%</span>
+        </div>
+        <input type="range" id="sliderMan" min="0" max="100" value="50" oninput="onManualChange()">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // UUID trùng khớp với firmware ESP32-C3
+    const SERVICE_UUID        = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+    const CHAR_NOTIFY_UUID    = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+    const CHAR_CONTROL_UUID   = "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e";
+
+    let bleDevice = null;
+    let controlChar = null;
+
+    async function toggleBLE() {
+      if (bleDevice && bleDevice.gatt.connected) {
+        bleDevice.gatt.disconnect();
+        return;
+      }
+      try {
+        console.log("Đang quét thiết bị BLE...");
+        bleDevice = await navigator.bluetooth.requestDevice({
+          filters: [{ name: 'ESP32_SmartFan' }],
+          optionalServices: [SERVICE_UUID]
+        });
+
+        bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+        const server = await bleDevice.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+
+        // Đăng ký nhận Notify
+        const notifyChar = await service.getCharacteristic(CHAR_NOTIFY_UUID);
+        await notifyChar.startNotifications();
+        notifyChar.addEventListener('characteristicvaluechanged', handleNotifications);
+
+        // Lấy Characteristic ghi lệnh
+        controlChar = await service.getCharacteristic(CHAR_CONTROL_UUID);
+
+        document.getElementById('bleBtn').classList.add('connected');
+        document.getElementById('bleText').innerText = 'Đã nối';
+      } catch (err) {
+        console.error("Lỗi BLE:", err);
+      }
+    }
+
+    function onDisconnected() {
+      document.getElementById('bleBtn').classList.remove('connected');
+      document.getElementById('bleText').innerText = 'Kết nối';
+      document.getElementById('fanRotor').style.animationPlayState = 'paused';
+    }
+
+    function handleNotifications(event) {
+      const value = new TextDecoder().decode(event.target.value);
+      try {
+        const data = JSON.parse(value);
+        document.getElementById('tempVal').innerText = data.t.toFixed(1);
+        document.getElementById('speedVal').innerText = data.p;
+
+        // Cập nhật tốc độ xoay của cánh quạt
+        const rotor = document.getElementById('fanRotor');
+        if (data.p > 0) {
+          rotor.style.animationPlayState = 'running';
+          // Tốc độ 100% -> chu kỳ 0.15s, Tốc độ 20% -> chu kỳ 1.2s
+          rotor.style.animationDuration = Math.max(0.12, 1.5 - (data.p / 100) * 1.35) + 's';
+        } else {
+          rotor.style.animationPlayState = 'paused';
+        }
+      } catch(e) {}
+    }
+
+    function sendCommand(cmd) {
+      if (controlChar && bleDevice.gatt.connected) {
+        controlChar.writeValue(new TextEncoder().encode(cmd));
+      }
+    }
+
+    function switchMode(auto) {
+      document.getElementById('tabAuto').classList.toggle('active', auto);
+      document.getElementById('tabMan').classList.toggle('active', !auto);
+      document.getElementById('autoControls').classList.toggle('hidden', !auto);
+      document.getElementById('manualControls').classList.toggle('hidden', auto);
+      sendCommand('MODE:' + (auto ? '1' : '0'));
+    }
+
+    function onCurveChange() {
+      let min = parseInt(document.getElementById('sliderMin').value);
+      let max = parseInt(document.getElementById('sliderMax').value);
+      if (min >= max) {
+        max = min + 1;
+        document.getElementById('sliderMax').value = max;
+      }
+      document.getElementById('minDisplay').innerText = min + '°C';
+      document.getElementById('maxDisplay').innerText = max + '°C';
+      sendCommand('AUTO:' + min + ',' + max);
+    }
+
+    function onManualChange() {
+      let val = document.getElementById('sliderMan').value;
+      document.getElementById('manDisplay').innerText = val + '%';
+      sendCommand('MAN:' + val);
+    }
+  </script>
+</body>
+</html>
