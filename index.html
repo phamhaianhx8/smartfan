@@ -319,96 +319,52 @@
     const CHAR_NOTIFY_UUID    = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
     const CHAR_CONTROL_UUID   = "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e";
 
-    let bleDevice = null;
-    let controlChar = null;
+    // --- BỘ LỌC CHỐNG NGHẼN BLUETOOTH (THROTTLING) ---
+let isBusyWriting = false;
+let pendingCommand = null;
 
-    async function toggleBLE() {
-      if (bleDevice && bleDevice.gatt.connected) {
-        bleDevice.gatt.disconnect();
-        return;
-      }
-      try {
-        console.log("Đang quét thiết bị BLE...");
-        bleDevice = await navigator.bluetooth.requestDevice({
-          filters: [{ name: 'ESP32_SmartFan' }],
-          optionalServices: [SERVICE_UUID]
-        });
+async function sendCommand(cmd) {
+  if (!controlChar || !bleDevice || !bleDevice.gatt.connected) return;
 
-        bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
-        const server = await bleDevice.gatt.connect();
-        const service = await server.getPrimaryService(SERVICE_UUID);
+  // Nếu Bluetooth đang bận gửi lệnh trước, lưu lệnh mới nhất vào hàng chờ
+  if (isBusyWriting) {
+    pendingCommand = cmd;
+    return;
+  }
 
-        // Đăng ký nhận Notify
-        const notifyChar = await service.getCharacteristic(CHAR_NOTIFY_UUID);
-        await notifyChar.startNotifications();
-        notifyChar.addEventListener('characteristicvaluechanged', handleNotifications);
-
-        // Lấy Characteristic ghi lệnh
-        controlChar = await service.getCharacteristic(CHAR_CONTROL_UUID);
-
-        document.getElementById('bleBtn').classList.add('connected');
-        document.getElementById('bleText').innerText = 'Đã nối';
-      } catch (err) {
-        console.error("Lỗi BLE:", err);
-      }
+  isBusyWriting = true;
+  try {
+    await controlChar.writeValue(new TextEncoder().encode(cmd));
+  } catch (err) {
+    console.error("Lỗi gửi BLE:", err);
+  } finally {
+    isBusyWriting = false;
+    // Nếu có lệnh mới nhất đang chờ, gửi ngay lập tức
+    if (pendingCommand) {
+      const nextCmd = pendingCommand;
+      pendingCommand = null;
+      sendCommand(nextCmd);
     }
+  }
+}
 
-    function onDisconnected() {
-      document.getElementById('bleBtn').classList.remove('connected');
-      document.getElementById('bleText').innerText = 'Kết nối';
-      document.getElementById('fanRotor').style.animationPlayState = 'paused';
-    }
+function onManualChange() {
+  let val = document.getElementById('sliderMan').value;
+  document.getElementById('manDisplay').innerText = val + '%';
+  sendCommand('MAN:' + val);
+}
 
-    function handleNotifications(event) {
-      const value = new TextDecoder().decode(event.target.value);
-      try {
-        const data = JSON.parse(value);
-        document.getElementById('tempVal').innerText = data.t.toFixed(1);
-        document.getElementById('speedVal').innerText = data.p;
-
-        // Cập nhật tốc độ xoay của cánh quạt
-        const rotor = document.getElementById('fanRotor');
-        if (data.p > 0) {
-          rotor.style.animationPlayState = 'running';
-          // Tốc độ 100% -> chu kỳ 0.15s, Tốc độ 20% -> chu kỳ 1.2s
-          rotor.style.animationDuration = Math.max(0.12, 1.5 - (data.p / 100) * 1.35) + 's';
-        } else {
-          rotor.style.animationPlayState = 'paused';
-        }
-      } catch(e) {}
-    }
-
-    function sendCommand(cmd) {
-      if (controlChar && bleDevice.gatt.connected) {
-        controlChar.writeValue(new TextEncoder().encode(cmd));
-      }
-    }
-
-    function switchMode(auto) {
-      document.getElementById('tabAuto').classList.toggle('active', auto);
-      document.getElementById('tabMan').classList.toggle('active', !auto);
-      document.getElementById('autoControls').classList.toggle('hidden', !auto);
-      document.getElementById('manualControls').classList.toggle('hidden', auto);
-      sendCommand('MODE:' + (auto ? '1' : '0'));
-    }
-
-    function onCurveChange() {
-      let min = parseInt(document.getElementById('sliderMin').value);
-      let max = parseInt(document.getElementById('sliderMax').value);
-      if (min >= max) {
-        max = min + 1;
-        document.getElementById('sliderMax').value = max;
-      }
-      document.getElementById('minDisplay').innerText = min + '°C';
-      document.getElementById('maxDisplay').innerText = max + '°C';
-      sendCommand('AUTO:' + min + ',' + max);
-    }
-
-    function onManualChange() {
-      let val = document.getElementById('sliderMan').value;
-      document.getElementById('manDisplay').innerText = val + '%';
-      sendCommand('MAN:' + val);
-    }
+function onCurveChange() {
+  let min = parseInt(document.getElementById('sliderMin').value);
+  let max = parseInt(document.getElementById('sliderMax').value);
+  if (min >= max) {
+    max = min + 1;
+    document.getElementById('sliderMax').value = max;
+  }
+  document.getElementById('minDisplay').innerText = min + '°C';
+  document.getElementById('maxDisplay').innerText = max + '°C';
+  sendCommand('AUTO:' + min + ',' + max);
+}
   </script>
 </body>
 </html>
