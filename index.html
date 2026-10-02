@@ -379,7 +379,7 @@
     <!-- MÀN HÌNH MINITV (ESP8266) -->
     <div class="card-sub">
       <h2>Màn Hình Mini TV (ESP8266)</h2>
-      <input type="text" class="input-pill" style="width: 100%;" id="tvMac" placeholder="VD: 24:4C:AB:4F:B5:DC">
+      <input type="text" class="input-pill" style="width: 100%;" id="tvMac" placeholder="VD: 24:4C:AB:4F:B5:DC" maxlength="17">
       <button class="btn-action" onclick="saveTvMac()">Lưu MAC Màn Hình</button>
     </div>
 
@@ -399,7 +399,21 @@
 const SERVICE_UUID      = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHAR_NOTIFY_UUID  = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 const CHAR_CONTROL_UUID = "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e";
-
+// TỰ ĐỘNG VIẾT HOA VÀ CHÈN DẤU ":" KHI NHẬP ĐỊA CHỈ MAC
+const macInput = document.getElementById("tvMac");
+if (macInput) {
+  macInput.addEventListener("input", function(e) {
+    // 1. Chỉ giữ lại các ký tự hex (0-9, A-F) và tự động viết hoa
+    let raw = this.value.toUpperCase().replace(/[^A-F0-9]/g, "");
+    
+    // 2. Giới hạn tối đa 12 ký tự hex (tương ứng 6 cặp byte)
+    if (raw.length > 12) raw = raw.substring(0, 12);
+    
+    // 3. Tự động gom từng cặp 2 ký tự và ngăn cách bằng dấu 2 chấm
+    let formatted = raw.match(/.{1,2}/g)?.join(":") || "";
+    this.value = formatted;
+  });
+}
 async function connectBle() {
   try {
     bleDevice = await navigator.bluetooth.requestDevice({
