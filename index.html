@@ -427,51 +427,73 @@ async function connectBle() {
   }
 }
 
-    let rxBuf = "";
+let rxBuf = "";
     function handleNotifications(e) {
       const chunk = new TextDecoder().decode(e.target.value);
       rxBuf += chunk;
+      
       if (rxBuf.endsWith("\n")) {
         try {
           const m = JSON.parse(rxBuf.trim());
+          
           if (m.type === "init") {
-            document.getElementById("tvMac").value = m.tvMac || "";
-            document.getElementById("curBms").innerText = m.bmsMac || "Chưa có";
-            document.getElementById("rngTmin").value = m.tMin;
-            document.getElementById("txtTmin").innerText = m.tMin + "°C";
-            document.getElementById("rngTmax").value = m.tMax;
-            document.getElementById("txtTmax").innerText = m.tMax + "°C";
-            if (m.r0) document.getElementById("inNtcR0").value = m.r0;
-            if (m.mode) switchMode(m.mode, false);
-            if (m.manDuty !== undefined) {
+            if (document.getElementById("tvMac")) document.getElementById("tvMac").value = m.tvMac || "";
+            if (document.getElementById("curBms")) document.getElementById("curBms").innerText = m.bmsMac || "Chưa có";
+            if (document.getElementById("rngTmin")) {
+              document.getElementById("rngTmin").value = m.tMin;
+              document.getElementById("txtTmin").innerText = m.tMin + "°C";
+            }
+            if (document.getElementById("rngTmax")) {
+              document.getElementById("rngTmax").value = m.tMax;
+              document.getElementById("txtTmax").innerText = m.tMax + "°C";
+            }
+            if (document.getElementById("inNtcR0")) document.getElementById("inNtcR0").value = m.r0 || 10000;
+            if (m.m !== undefined) switchMode(m.m === 1 ? 'auto' : 'manual', false);
+            if (m.manDuty !== undefined && document.getElementById("rngManualDuty")) {
               document.getElementById("rngManualDuty").value = m.manDuty;
               document.getElementById("txtManualDuty").innerText = m.manDuty + "%";
             }
-          } else if (m.type === "tick") {
-            document.getElementById("valNtc").innerText = m.ntc.toFixed(1) + " °C";
-            document.getElementById("valFan").innerText = m.fan + " %";
-            document.getElementById("valVolt").innerText = m.v.toFixed(2) + " V";
-
-            // Hiệu ứng quay mượt theo % công suất
-            const fanEl = document.getElementById("fanIcon");
-            if (m.fan > 0) {
-              const sec = Math.max(0.12, (100 - m.fan) / 55);
-              fanEl.style.animation = `spin ${sec}s linear infinite`;
-            } else {
-              fanEl.style.animation = "none";
-            }
-          } else if (m.type === "scan_result") {
-            document.getElementById("btnScanBms").innerText = "Quét Tìm Mạch JK BMS";
-            const el = document.getElementById("deviceList");
-            el.innerHTML = "";
-            m.devices.forEach(d => {
-              el.innerHTML += `<div class="dev-item">
-                <div><b>${d.name}</b><br><small style="color:var(--text-dim)">${d.mac} (${d.rssi}dBm)</small></div>
-                <button class="btn-select" onclick="selectBms('${d.mac}')">Chọn</button>
-              </div>`;
-            });
           }
-        } catch (err) {}
+          else if (m.type === "tick") {
+            // Nhiệt độ NTC
+            if (m.ntc !== undefined) {
+              document.getElementById("valNtc").innerText = m.ntc.toFixed(1) + " °C";
+            }
+            // Công suất quạt %
+            if (m.fan !== undefined) {
+              document.getElementById("valFan").innerText = m.fan + " %";
+              const fanEl = document.getElementById("fanIcon");
+              if (fanEl) {
+                if (m.fan > 0) {
+                  const sec = Math.max(0.12, (100 - m.fan) / 55);
+                  fanEl.style.animation = `spin ${sec}s linear infinite`;
+                } else {
+                  fanEl.style.animation = "none";
+                }
+              }
+            }
+            // Điện áp Pin BMS
+            if (m.v !== undefined) {
+              document.getElementById("valVolt").innerText = (m.v > 5.0) ? (m.v.toFixed(2) + " V") : "-- V";
+            }
+          }
+          else if (m.type === "scan_result") {
+            const btn = document.getElementById("btnScanBms");
+            if (btn) btn.innerText = "Quét Tìm Mạch JK BMS";
+            const el = document.getElementById("deviceList");
+            if (el) {
+              el.innerHTML = "";
+              m.devices.forEach(d => {
+                el.innerHTML += `<div class="dev-item">
+                  <div><b>${d.name}</b><br><small style="color:var(--text-dim)">${d.mac} (${d.rssi}dBm)</small></div>
+                  <button class="btn-select" onclick="selectBms('${d.mac}')">Chọn</button>
+                </div>`;
+              });
+            }
+          }
+        } catch (err) {
+          console.error("Lỗi parse JSON:", err);
+        }
         rxBuf = "";
       }
     }
