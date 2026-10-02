@@ -6,37 +6,42 @@
   <title>Smart Fan & BMS Gateway</title>
   <style>
     :root {
-      --bg: #0d111a;
-      --card-bg: #161b26;
-      --card-inner: #1c2232;
+      --bg: #0b0f19;
+      --card-bg: #141a29;
+      --card-inner: #1c2438;
       --accent: #00d2ff;
       --accent-glow: rgba(0, 210, 255, 0.4);
       --accent-grad: linear-gradient(135deg, #00f2fe 0%, #0077fe 100%);
       --text: #ffffff;
-      --text-dim: #7e8b9b;
+      --text-dim: #8b9bb4;
       --red: #ff4757;
       --green: #2ed573;
     }
 
+    * {
+      box-sizing: border-box;
+      font-family: "Times New Roman", Times, serif !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
       background-color: var(--bg);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: var(--text);
       margin: 0;
-      padding: 16px 12px;
+      padding: 18px 12px;
       display: flex;
       justify-content: center;
-      -webkit-tap-highlight-color: transparent;
+      min-height: 100vh;
     }
 
     .container {
       width: 100%;
       max-width: 420px;
-      background: #131722;
+      background: #111522;
       border-radius: 28px;
-      padding: 24px 18px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 22px 18px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     /* HEADER */
@@ -47,22 +52,21 @@
       margin-bottom: 20px;
     }
     .header h1 {
-      font-size: 1.4rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 1px;
       margin: 0;
       color: #fff;
     }
     .btn-badge {
       display: flex;
       align-items: center;
-      gap: 6px;
-      background: #202738;
-      border: 1px solid rgba(255,255,255,0.08);
+      gap: 7px;
+      background: #1c2336;
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 20px;
       padding: 6px 14px;
-      font-size: 0.85rem;
-      font-weight: 600;
+      font-size: 0.95rem;
       color: #fff;
       cursor: pointer;
     }
@@ -78,31 +82,30 @@
       box-shadow: 0 0 8px var(--green);
     }
 
-    /* CARD CHÍNH CÓ QUẠT */
+    /* CARD HIỂN THỊ CHÍNH */
     .card-main {
       background: var(--card-bg);
       border-radius: 20px;
-      padding: 20px;
+      padding: 18px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.04);
     }
     .fan-wrapper {
-      width: 100px;
-      height: 100px;
+      width: 105px;
+      height: 105px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
     .fan-icon {
-      width: 75px;
-      height: 75px;
-      fill: var(--accent);
-      filter: drop-shadow(0 0 15px var(--accent-glow));
+      width: 90px;
+      height: 90px;
       transform-origin: center;
       animation: spin 0s linear infinite;
+      filter: drop-shadow(0 0 12px var(--accent-glow));
     }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
@@ -112,49 +115,73 @@
     .telem-item { margin-bottom: 8px; }
     .telem-item:last-child { margin-bottom: 0; }
     .telem-label {
-      font-size: 0.72rem;
-      font-weight: 700;
+      font-size: 0.8rem;
       letter-spacing: 0.5px;
       color: var(--text-dim);
       text-transform: uppercase;
     }
     .telem-val {
-      font-size: 1.45rem;
-      font-weight: 800;
+      font-size: 1.5rem;
+      font-weight: bold;
       color: var(--accent);
-      margin-top: 1px;
     }
     .telem-val.temp { color: #ff5252; }
 
-    /* CARD ĐIỀU KHIỂN QUẠT */
+    /* TAB CHUYỂN CHẾ ĐỘ QUẠT */
+    .mode-tab-container {
+      display: flex;
+      background: #192033;
+      border-radius: 14px;
+      padding: 4px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .mode-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      padding: 10px;
+      font-size: 1.05rem;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .mode-btn.active {
+      background: #28334f;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    /* CARD ĐIỀU KHIỂN */
     .card-settings {
       background: var(--card-bg);
       border-radius: 20px;
       padding: 18px 20px;
       margin-bottom: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.04);
     }
     .slider-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 14px;
-      font-size: 0.9rem;
-      font-weight: 600;
+      margin-top: 12px;
+      font-size: 1.05rem;
     }
     .slider-row span:last-child {
       color: var(--accent);
-      font-weight: 800;
-      font-size: 1rem;
+      font-weight: bold;
+      font-size: 1.15rem;
     }
     input[type=range] {
       -webkit-appearance: none;
       width: 100%;
       height: 6px;
       border-radius: 3px;
-      background: #252e42;
+      background: #252f47;
       outline: none;
-      margin-top: 8px;
+      margin-top: 10px;
     }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
@@ -167,64 +194,72 @@
       border: 2px solid var(--accent);
     }
 
-    /* NÚT LƯU GRADIENT DẠ QUANG */
     .btn-save {
       width: 100%;
       background: var(--accent-grad);
       border: none;
       border-radius: 14px;
-      padding: 14px;
+      padding: 13px;
       color: #fff;
-      font-weight: 800;
-      font-size: 1rem;
+      font-weight: bold;
+      font-size: 1.1rem;
       cursor: pointer;
       margin-top: 18px;
       box-shadow: 0 6px 20px rgba(0, 210, 255, 0.35);
-      transition: transform 0.1s ease;
     }
-    .btn-save:active { transform: scale(0.98); }
 
-    /* CARD CẤU HÌNH PHỤ */
+    /* KHỐI NTC & CẤU HÌNH KHÁC */
+    .ntc-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .input-pill {
+      flex: 1;
+      background: var(--card-inner);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 11px 14px;
+      color: #fff;
+      font-size: 1.05rem;
+      outline: none;
+    }
+    .input-pill:focus { border-color: var(--accent); }
+    .btn-action-small {
+      background: #252f47;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      font-weight: bold;
+      padding: 0 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
     .card-sub {
       background: var(--card-bg);
       border-radius: 20px;
-      padding: 18px 20px;
+      padding: 16px 20px;
       margin-bottom: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.04);
     }
     .card-sub h2 {
-      font-size: 0.95rem;
+      font-size: 1.15rem;
       color: var(--accent);
       margin: 0 0 12px 0;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-weight: bold;
     }
-    .input-pill {
-      width: 100%;
-      box-sizing: border-box;
-      background: var(--card-inner);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 12px;
-      padding: 12px 14px;
-      color: #fff;
-      font-size: 0.95rem;
-      outline: none;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    .input-pill:focus { border-color: var(--accent); }
     .btn-action {
       width: 100%;
-      background: #252e42;
-      border: 1px solid rgba(255,255,255,0.08);
+      background: #252f47;
+      border: 1px solid rgba(255,255,255,0.1);
       color: #fff;
-      font-weight: 700;
+      font-weight: bold;
       padding: 12px;
       border-radius: 12px;
       cursor: pointer;
       margin-top: 10px;
-      font-size: 0.9rem;
+      font-size: 1rem;
     }
     .dev-item {
       background: var(--card-inner);
@@ -235,16 +270,14 @@
       justify-content: space-between;
       align-items: center;
     }
-    .dev-name { font-weight: 700; font-size: 0.9rem; }
-    .dev-sub { font-size: 0.75rem; color: var(--text-dim); }
     .btn-select {
       background: var(--accent);
       color: #000;
       border: none;
       padding: 6px 14px;
       border-radius: 8px;
-      font-weight: 800;
-      font-size: 0.8rem;
+      font-weight: bold;
+      font-size: 0.9rem;
       cursor: pointer;
     }
   </style>
@@ -261,11 +294,25 @@
       </button>
     </div>
 
-    <!-- MAIN TELEMETRY CARD CÓ QUẠT NEON -->
+    <!-- MAIN CARD: CÁNH QUẠT UỐN CONG & TELEMETRY -->
     <div class="card-main">
       <div class="fan-wrapper">
-        <svg class="fan-icon" id="fanIcon" viewBox="0 0 24 24">
-          <path d="M12 2C13.1 2 14 2.9 14 4V6.1C16.8 6.6 19 8.8 19.7 11.6L21.4 10.6C22.4 10 23.7 10.4 24.3 11.4C24.8 12.3 24.5 13.6 23.5 14.2L20.8 15.7C20.3 16.4 19.6 17 18.8 17.5L19.8 19.3C20.4 20.3 20 21.6 19 22.2C18.1 22.7 16.8 22.4 16.2 21.4L15.2 19.6C14.2 20 13.1 20.2 12 20.2C10.9 20.2 9.8 20 8.8 19.6L7.8 21.4C7.2 22.4 5.9 22.7 5 22.2C4 21.6 3.6 20.3 4.2 19.3L5.2 17.5C4.4 17 3.7 16.4 3.2 15.7L0.5 14.2C-0.5 13.6 -0.8 12.3 -0.3 11.4C0.3 10.4 1.6 10 2.6 10.6L4.3 11.6C5 8.8 7.2 6.6 10 6.1V4C10 2.9 10.9 2 12 2M12 9A3 3 0 0 0 9 12A3 3 0 0 0 12 15A3 3 0 0 0 15 12A3 3 0 0 0 12 9Z"/>
+        <svg class="fan-icon" id="fanIcon" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00f2fe"/>
+              <stop offset="100%" stop-color="#0072ff"/>
+            </linearGradient>
+          </defs>
+          <!-- 4 Cánh quạt chân vịt bo tròn mềm mại -->
+          <g fill="url(#bladeGrad)">
+            <path d="M50,50 C40,30 26,18 42,8 C54,-1 68,16 50,50 Z" />
+            <path d="M50,50 C70,40 82,26 92,42 C101,54 84,68 50,50 Z" />
+            <path d="M50,50 C60,70 74,82 58,92 C46,101 32,84 50,50 Z" />
+            <path d="M50,50 C30,60 18,74 8,58 C-1,46 16,32 50,50 Z" />
+          </g>
+          <circle cx="50" cy="50" r="11" fill="#141a29" stroke="#00f2fe" stroke-width="2.5"/>
+          <circle cx="50" cy="50" r="5" fill="#00f2fe"/>
         </svg>
       </div>
 
@@ -285,8 +332,14 @@
       </div>
     </div>
 
-    <!-- CARD CÀI ĐẶT QUẠT THEO SLIDER -->
-    <div class="card-settings">
+    <!-- TAB CHUYỂN CHẾ ĐỘ: TỰ ĐỘNG / THỦ CÔNG -->
+    <div class="mode-tab-container">
+      <button class="mode-btn active" id="tabAuto" onclick="switchMode('auto')">Tự Động</button>
+      <button class="mode-btn" id="tabManual" onclick="switchMode('manual')">Thủ Công</button>
+    </div>
+
+    <!-- PANEL ĐIỀU KHIỂN TỰ ĐỘNG -->
+    <div class="card-settings" id="panelAuto">
       <div class="slider-row">
         <span>Bắt đầu tăng tốc (Min)</span>
         <span id="txtTmin">30°C</span>
@@ -299,27 +352,42 @@
       </div>
       <input type="range" id="rngTmax" min="30" max="80" value="50" oninput="document.getElementById('txtTmax').innerText=this.value+'°C'">
 
-      <div class="slider-row" style="margin-top: 18px;">
-        <span>Tốc độ quạt tối thiểu (Duty)</span>
-        <span id="txtDuty">20%</span>
-      </div>
-      <input type="range" id="rngDuty" min="0" max="50" value="20" oninput="document.getElementById('txtDuty').innerText=this.value+'%'">
-
-      <button class="btn-save" onclick="saveFanSettings()">💾 Lưu Cài Đặt Vào ESP32</button>
+      <button class="btn-save" onclick="saveAutoSettings()">💾 Lưu Cài Đặt Vào ESP32</button>
     </div>
 
-    <!-- CARD CẤU HÌNH MAC MÀN HÌNH MINITV -->
+    <!-- PANEL ĐIỀU KHIỂN THỦ CÔNG -->
+    <div class="card-settings" id="panelManual" style="display: none;">
+      <div class="slider-row">
+        <span>Tốc độ quạt thủ công</span>
+        <span id="txtManualDuty">50%</span>
+      </div>
+      <input type="range" id="rngManualDuty" min="0" max="100" value="50" oninput="updateManualDuty(this.value)">
+      <div style="font-size: 0.9rem; color: var(--text-dim); margin-top: 14px; text-align: center;">
+        * Quạt điều tốc trực tiếp theo thanh trượt khi ở chế độ thủ công.
+      </div>
+    </div>
+
+    <!-- CÀI ĐẶT ĐIỆN TRỞ NTC (R0) -->
+    <div class="card-sub">
+      <h2>Thông Số Điện Trở NTC</h2>
+      <div class="ntc-row">
+        <input type="number" class="input-pill" id="inNtcR0" placeholder="NTC R0 (Ω), vd: 10000">
+        <button class="btn-action-small" onclick="saveNtcR0()">Đặt NTC (Ω)</button>
+      </div>
+    </div>
+
+    <!-- MÀN HÌNH MINITV (ESP8266) -->
     <div class="card-sub">
       <h2>Màn Hình Mini TV (ESP8266)</h2>
-      <input type="text" class="input-pill" id="tvMac" placeholder="VD: 24:4C:AB:4F:B5:DC">
+      <input type="text" class="input-pill" style="width: 100%;" id="tvMac" placeholder="VD: 24:4C:AB:4F:B5:DC">
       <button class="btn-action" onclick="saveTvMac()">Lưu MAC Màn Hình</button>
     </div>
 
-    <!-- CARD QUÉT BLUETOOTH BMS -->
+    <!-- PIN JK BMS (BLUETOOTH) -->
     <div class="card-sub">
       <h2>Pin JK BMS (Bluetooth)</h2>
-      <div style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 8px;">
-        BMS Đang Lưu: <b id="curBms" style="color:#fff;">Chưa chọn</b>
+      <div style="font-size: 0.95rem; color: var(--text-dim); margin-bottom: 8px;">
+        BMS Đang Chọn: <b id="curBms" style="color:#fff;">Chưa chọn</b>
       </div>
       <button class="btn-action" id="btnScanBms" onclick="scanBms()">Quét Tìm Mạch JK BMS</button>
       <div id="deviceList"></div>
@@ -332,6 +400,7 @@
     const CHAR_TX_UUID = "19b10002-e8f2-537e-4f6c-d104768a1214";
 
     let bleDevice, rxChar, txChar;
+    let currentMode = "auto";
 
     async function connectBle() {
       try {
@@ -370,23 +439,27 @@
         try {
           const m = JSON.parse(rxBuf.trim());
           if (m.type === "init") {
-            document.getElementById("tvMac").value = m.tvMac;
+            document.getElementById("tvMac").value = m.tvMac || "";
             document.getElementById("curBms").innerText = m.bmsMac || "Chưa có";
             document.getElementById("rngTmin").value = m.tMin;
             document.getElementById("txtTmin").innerText = m.tMin + "°C";
             document.getElementById("rngTmax").value = m.tMax;
             document.getElementById("txtTmax").innerText = m.tMax + "°C";
-            document.getElementById("rngDuty").value = m.dutyMin;
-            document.getElementById("txtDuty").innerText = m.dutyMin + "%";
+            if (m.r0) document.getElementById("inNtcR0").value = m.r0;
+            if (m.mode) switchMode(m.mode, false);
+            if (m.manDuty !== undefined) {
+              document.getElementById("rngManualDuty").value = m.manDuty;
+              document.getElementById("txtManualDuty").innerText = m.manDuty + "%";
+            }
           } else if (m.type === "tick") {
             document.getElementById("valNtc").innerText = m.ntc.toFixed(1) + " °C";
             document.getElementById("valFan").innerText = m.fan + " %";
             document.getElementById("valVolt").innerText = m.v.toFixed(2) + " V";
 
-            // Hiệu ứng quay quạt neon theo % công suất
+            // Hiệu ứng quay mượt theo % công suất
             const fanEl = document.getElementById("fanIcon");
             if (m.fan > 0) {
-              const sec = Math.max(0.15, (100 - m.fan) / 50);
+              const sec = Math.max(0.12, (100 - m.fan) / 55);
               fanEl.style.animation = `spin ${sec}s linear infinite`;
             } else {
               fanEl.style.animation = "none";
@@ -397,7 +470,7 @@
             el.innerHTML = "";
             m.devices.forEach(d => {
               el.innerHTML += `<div class="dev-item">
-                <div><div class="dev-name">${d.name}</div><div class="dev-sub">${d.mac} (${d.rssi}dBm)</div></div>
+                <div><b>${d.name}</b><br><small style="color:var(--text-dim)">${d.mac} (${d.rssi}dBm)</small></div>
                 <button class="btn-select" onclick="selectBms('${d.mac}')">Chọn</button>
               </div>`;
             });
@@ -413,22 +486,52 @@
       await rxChar.writeValue(data);
     }
 
-    function saveFanSettings() {
+    function switchMode(mode, sendToMcu = true) {
+      currentMode = mode;
+      if (mode === "auto") {
+        document.getElementById("tabAuto").classList.add("active");
+        document.getElementById("tabManual").classList.remove("active");
+        document.getElementById("panelAuto").style.display = "block";
+        document.getElementById("panelManual").style.display = "none";
+      } else {
+        document.getElementById("tabManual").classList.add("active");
+        document.getElementById("tabAuto").classList.remove("active");
+        document.getElementById("panelManual").style.display = "block";
+        document.getElementById("panelAuto").style.display = "none";
+      }
+      if (sendToMcu) {
+        sendCmd({ action: "set_mode", mode: mode });
+      }
+    }
+
+    function saveAutoSettings() {
       sendCmd({
-        action: "set_fan_cfg",
+        action: "set_auto_cfg",
         tMin: parseFloat(document.getElementById("rngTmin").value),
-        tMax: parseFloat(document.getElementById("rngTmax").value),
-        dutyMin: parseInt(document.getElementById("rngDuty").value),
-        rRef: 10000.0,
-        beta: 3950.0
+        tMax: parseFloat(document.getElementById("rngTmax").value)
       });
-      alert("Đã lưu cấu hình quạt vào ESP32-C3!");
+      alert("Đã lưu cài đặt tự động vào ESP32!");
+    }
+
+    function updateManualDuty(val) {
+      document.getElementById("txtManualDuty").innerText = val + "%";
+      sendCmd({ action: "set_manual_duty", duty: parseInt(val) });
+    }
+
+    function saveNtcR0() {
+      const r0Val = parseFloat(document.getElementById("inNtcR0").value);
+      if (!r0Val || r0Val <= 0) {
+        alert("Vui lòng nhập trị số điện trở hợp lệ!");
+        return;
+      }
+      sendCmd({ action: "set_ntc_r0", r0: r0Val });
+      alert("Đã lưu thông số NTC R0 vào ESP32!");
     }
 
     function saveTvMac() {
       const val = document.getElementById("tvMac").value.trim();
       sendCmd({ action: "set_tv_mac", mac: val });
-      alert("Đã lưu MAC TV!");
+      alert("Đã lưu MAC Mini TV!");
     }
 
     function scanBms() {
