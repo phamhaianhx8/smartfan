@@ -395,41 +395,37 @@
   </div>
 
   <script>
-    const SERVICE_UUID = "19b10000-e8f2-537e-4f6c-d104768a1214";
-    const CHAR_RX_UUID = "19b10001-e8f2-537e-4f6c-d104768a1214";
-    const CHAR_TX_UUID = "19b10002-e8f2-537e-4f6c-d104768a1214";
+// Khớp đúng 100% với UUID trong code ESP32-C3
+const SERVICE_UUID      = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+const CHAR_NOTIFY_UUID  = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+const CHAR_CONTROL_UUID = "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e";
 
-    let bleDevice, rxChar, txChar;
-    let currentMode = "auto";
+async function connectBle() {
+  try {
+    bleDevice = await navigator.bluetooth.requestDevice({
+      filters: [{ name: "ESP32_SmartFan" }], // ĐỔI THÀNH TÊN NÀY
+      optionalServices: [SERVICE_UUID]
+    });
 
-    async function connectBle() {
-      try {
-        bleDevice = await navigator.bluetooth.requestDevice({
-          filters: [{ name: "C3_GATEWAY_CONFIG" }],
-          optionalServices: [SERVICE_UUID]
-        });
+    bleDevice.addEventListener('gattserverdisconnected', () => {
+      document.getElementById("dotStatus").className = "dot";
+      document.getElementById("txtStatus").innerText = "Kết nối";
+    });
 
-        bleDevice.addEventListener('gattserverdisconnected', () => {
-          document.getElementById("dotStatus").className = "dot";
-          document.getElementById("txtStatus").innerText = "Kết nối";
-        });
+    const server = await bleDevice.gatt.connect();
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    rxChar = await service.getCharacteristic(CHAR_CONTROL_UUID);
+    txChar = await service.getCharacteristic(CHAR_NOTIFY_UUID);
 
-        const server = await bleDevice.gatt.connect();
-        const service = await server.getPrimaryService(SERVICE_UUID);
-        rxChar = await service.getCharacteristic(CHAR_RX_UUID);
-        txChar = await service.getCharacteristic(CHAR_TX_UUID);
+    await txChar.startNotifications();
+    txChar.addEventListener('characteristicvaluechanged', handleNotifications);
 
-        await txChar.startNotifications();
-        txChar.addEventListener('characteristicvaluechanged', handleNotifications);
-
-        document.getElementById("dotStatus").className = "dot connected";
-        document.getElementById("txtStatus").innerText = "Đã kết nối";
-
-        sendCmd({ action: "get_init" });
-      } catch (err) {
-        console.error(err);
-      }
-    }
+    document.getElementById("dotStatus").className = "dot connected";
+    document.getElementById("txtStatus").innerText = "Đã kết nối";
+  } catch (err) {
+    console.error(err);
+  }
+}
 
     let rxBuf = "";
     function handleNotifications(e) {
