@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Smart Fan & BMS Gateway</title>
+  <title>Smart Fan & JK BMS Controller</title>
   <style>
     :root {
       --bg: #0b0f19;
@@ -28,7 +28,7 @@
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
-      padding: 18px 12px;
+      padding: 16px 12px;
       display: flex;
       justify-content: center;
       min-height: 100vh;
@@ -36,9 +36,9 @@
 
     .container {
       width: 100%;
-      max-width: 420px;
+      max-width: 430px;
       background: #111522;
-      border-radius: 28px;
+      border-radius: 26px;
       padding: 22px 18px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.7);
       border: 1px solid rgba(255, 255, 255, 0.06);
@@ -54,7 +54,7 @@
     .header h1 {
       font-size: 1.5rem;
       font-weight: bold;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       margin: 0;
       color: #fff;
     }
@@ -82,7 +82,7 @@
       box-shadow: 0 0 8px var(--green);
     }
 
-    /* CARD HIỂN THỊ CHÍNH */
+    /* TELEMETRY CARD */
     .card-main {
       background: var(--card-bg);
       border-radius: 20px;
@@ -101,17 +101,15 @@
       justify-content: center;
     }
     .fan-icon {
-      width: 90px;
-      height: 90px;
+      width: 92px;
+      height: 92px;
       transform-origin: center;
       animation: spin 0s linear infinite;
       filter: drop-shadow(0 0 12px var(--accent-glow));
     }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    .telemetry-col {
-      text-align: right;
-    }
+    .telemetry-col { text-align: right; }
     .telem-item { margin-bottom: 8px; }
     .telem-item:last-child { margin-bottom: 0; }
     .telem-label {
@@ -127,7 +125,7 @@
     }
     .telem-val.temp { color: #ff5252; }
 
-    /* TAB CHUYỂN CHẾ ĐỘ QUẠT */
+    /* TAB CHẾ ĐỘ QUẠT */
     .mode-tab-container {
       display: flex;
       background: #192033;
@@ -154,7 +152,7 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    /* CARD ĐIỀU KHIỂN */
+    /* CARD CÀI ĐẶT */
     .card-settings {
       background: var(--card-bg);
       border-radius: 20px;
@@ -208,7 +206,6 @@
       box-shadow: 0 6px 20px rgba(0, 210, 255, 0.35);
     }
 
-    /* KHỐI NTC & CẤU HÌNH KHÁC */
     .ntc-row {
       display: flex;
       gap: 10px;
@@ -261,6 +258,11 @@
       margin-top: 10px;
       font-size: 1rem;
     }
+    .btn-action:disabled {
+      background: #192033;
+      color: var(--text-dim);
+      cursor: not-allowed;
+    }
     .dev-item {
       background: var(--card-inner);
       border-radius: 12px;
@@ -304,7 +306,7 @@
               <stop offset="100%" stop-color="#0072ff"/>
             </linearGradient>
           </defs>
-          <!-- 4 Cánh quạt chân vịt bo tròn mềm mại -->
+          <!-- 4 Cánh quạt chân vịt bo cong mềm mại -->
           <g fill="url(#bladeGrad)">
             <path d="M50,50 C40,30 26,18 42,8 C54,-1 68,16 50,50 Z" />
             <path d="M50,50 C70,40 82,26 92,42 C101,54 84,68 50,50 Z" />
@@ -338,24 +340,24 @@
       <button class="mode-btn" id="tabManual" onclick="switchMode('manual')">Thủ Công</button>
     </div>
 
-    <!-- PANEL ĐIỀU KHIỂN TỰ ĐỘNG -->
+    <!-- PANEL TỰ ĐỘNG -->
     <div class="card-settings" id="panelAuto">
       <div class="slider-row">
         <span>Bắt đầu tăng tốc (Min)</span>
-        <span id="txtTmin">30°C</span>
+        <span id="txtTmin">37°C</span>
       </div>
-      <input type="range" id="rngTmin" min="20" max="60" value="30" oninput="document.getElementById('txtTmin').innerText=this.value+'°C'">
+      <input type="range" id="rngTmin" min="20" max="60" value="37" oninput="document.getElementById('txtTmin').innerText=this.value+'°C'">
 
       <div class="slider-row" style="margin-top: 18px;">
         <span>Quay cực đại 100% (Max)</span>
-        <span id="txtTmax">50°C</span>
+        <span id="txtTmax">45°C</span>
       </div>
-      <input type="range" id="rngTmax" min="30" max="80" value="50" oninput="document.getElementById('txtTmax').innerText=this.value+'°C'">
+      <input type="range" id="rngTmax" min="30" max="80" value="45" oninput="document.getElementById('txtTmax').innerText=this.value+'°C'">
 
       <button class="btn-save" onclick="saveAutoSettings()">💾 Lưu Cài Đặt Vào ESP32</button>
     </div>
 
-    <!-- PANEL ĐIỀU KHIỂN THỦ CÔNG -->
+    <!-- PANEL THỦ CÔNG -->
     <div class="card-settings" id="panelManual" style="display: none;">
       <div class="slider-row">
         <span>Tốc độ quạt thủ công</span>
@@ -363,11 +365,11 @@
       </div>
       <input type="range" id="rngManualDuty" min="0" max="100" value="50" oninput="updateManualDuty(this.value)">
       <div style="font-size: 0.9rem; color: var(--text-dim); margin-top: 14px; text-align: center;">
-        * Quạt điều tốc trực tiếp theo thanh trượt khi ở chế độ thủ công.
+        * Điều tốc quạt trực tiếp theo thanh trượt theo thời gian thực.
       </div>
     </div>
 
-    <!-- CÀI ĐẶT ĐIỆN TRỞ NTC (R0) -->
+    <!-- CẤU HÌNH ĐIỆN TRỞ NTC (R0) -->
     <div class="card-sub">
       <h2>Thông Số Điện Trở NTC</h2>
       <div class="ntc-row">
@@ -376,14 +378,14 @@
       </div>
     </div>
 
-    <!-- MÀN HÌNH MINITV (ESP8266) -->
+    <!-- CẤU HÌNH MAC MÀN HÌNH MINITV (ESP8266) -->
     <div class="card-sub">
       <h2>Màn Hình Mini TV (ESP8266)</h2>
       <input type="text" class="input-pill" style="width: 100%;" id="tvMac" placeholder="VD: 24:4C:AB:4F:B5:DC" maxlength="17">
       <button class="btn-action" onclick="saveTvMac()">Lưu MAC Màn Hình</button>
     </div>
 
-    <!-- PIN JK BMS (BLUETOOTH) -->
+    <!-- CẤU HÌNH PIN JK BMS (BLUETOOTH) -->
     <div class="card-sub">
       <h2>Pin JK BMS (Bluetooth)</h2>
       <div style="font-size: 0.95rem; color: var(--text-dim); margin-bottom: 8px;">
@@ -395,53 +397,59 @@
   </div>
 
   <script>
-// Khớp đúng 100% với UUID trong code ESP32-C3
-const SERVICE_UUID      = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-const CHAR_NOTIFY_UUID  = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
-const CHAR_CONTROL_UUID = "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e";
-// TỰ ĐỘNG VIẾT HOA VÀ CHÈN DẤU ":" KHI NHẬP ĐỊA CHỈ MAC
-const macInput = document.getElementById("tvMac");
-if (macInput) {
-  macInput.addEventListener("input", function(e) {
-    // 1. Chỉ giữ lại các ký tự hex (0-9, A-F) và tự động viết hoa
-    let raw = this.value.toUpperCase().replace(/[^A-F0-9]/g, "");
-    
-    // 2. Giới hạn tối đa 12 ký tự hex (tương ứng 6 cặp byte)
-    if (raw.length > 12) raw = raw.substring(0, 12);
-    
-    // 3. Tự động gom từng cặp 2 ký tự và ngăn cách bằng dấu 2 chấm
-    let formatted = raw.match(/.{1,2}/g)?.join(":") || "";
-    this.value = formatted;
-  });
-}
-async function connectBle() {
-  try {
-    bleDevice = await navigator.bluetooth.requestDevice({
-      filters: [{ name: "ESP32_SmartFan" }], // ĐỔI THÀNH TÊN NÀY
-      optionalServices: [SERVICE_UUID]
-    });
+    const SERVICE_UUID      = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+    const CHAR_NOTIFY_UUID  = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+    const CHAR_CONTROL_UUID = "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e";
 
-    bleDevice.addEventListener('gattserverdisconnected', () => {
-      document.getElementById("dotStatus").className = "dot";
-      document.getElementById("txtStatus").innerText = "Kết nối";
-    });
+    let bleDevice, rxChar, txChar;
+    let currentMode = "auto";
+    let scanTimeoutTimer = null;
 
-    const server = await bleDevice.gatt.connect();
-    const service = await server.getPrimaryService(SERVICE_UUID);
-    rxChar = await service.getCharacteristic(CHAR_CONTROL_UUID);
-    txChar = await service.getCharacteristic(CHAR_NOTIFY_UUID);
+    // TỰ ĐỘNG VIẾT HOA VÀ CHÈN DẤU ":" SAU MỖI 2 KÝ TỰ MAC
+    const macInput = document.getElementById("tvMac");
+    if (macInput) {
+      macInput.addEventListener("input", function() {
+        let raw = this.value.toUpperCase().replace(/[^A-F0-9]/g, "");
+        if (raw.length > 12) raw = raw.substring(0, 12);
+        let formatted = raw.match(/.{1,2}/g)?.join(":") || "";
+        this.value = formatted;
+      });
+    }
 
-    await txChar.startNotifications();
-    txChar.addEventListener('characteristicvaluechanged', handleNotifications);
+    async function connectBle() {
+      try {
+        bleDevice = await navigator.bluetooth.requestDevice({
+          filters: [{ name: "ESP32_SmartFan" }],
+          optionalServices: [SERVICE_UUID]
+        });
 
-    document.getElementById("dotStatus").className = "dot connected";
-    document.getElementById("txtStatus").innerText = "Đã kết nối";
-  } catch (err) {
-    console.error(err);
-  }
-}
+        bleDevice.addEventListener('gattserverdisconnected', () => {
+          document.getElementById("dotStatus").className = "dot";
+          document.getElementById("txtStatus").innerText = "Kết nối";
+          document.getElementById("valNtc").innerText = "-- °C";
+          document.getElementById("valFan").innerText = "-- %";
+          document.getElementById("valVolt").innerText = "-- V";
+          document.getElementById("fanIcon").style.animation = "none";
+        });
 
-let rxBuf = "";
+        const server = await bleDevice.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        rxChar = await service.getCharacteristic(CHAR_CONTROL_UUID);
+        txChar = await service.getCharacteristic(CHAR_NOTIFY_UUID);
+
+        await txChar.startNotifications();
+        txChar.addEventListener('characteristicvaluechanged', handleNotifications);
+
+        document.getElementById("dotStatus").className = "dot connected";
+        document.getElementById("txtStatus").innerText = "Đã kết nối";
+
+        sendCmd({ action: "get_init" });
+      } catch (err) {
+        console.error("Lỗi BLE:", err);
+      }
+    }
+
+    let rxBuf = "";
     function handleNotifications(e) {
       const chunk = new TextDecoder().decode(e.target.value);
       rxBuf += chunk;
@@ -469,11 +477,9 @@ let rxBuf = "";
             }
           }
           else if (m.type === "tick") {
-            // Nhiệt độ NTC
             if (m.ntc !== undefined) {
               document.getElementById("valNtc").innerText = m.ntc.toFixed(1) + " °C";
             }
-            // Công suất quạt %
             if (m.fan !== undefined) {
               document.getElementById("valFan").innerText = m.fan + " %";
               const fanEl = document.getElementById("fanIcon");
@@ -486,17 +492,24 @@ let rxBuf = "";
                 }
               }
             }
-            // Điện áp Pin BMS
             if (m.v !== undefined) {
               document.getElementById("valVolt").innerText = (m.v > 5.0) ? (m.v.toFixed(2) + " V") : "-- V";
             }
           }
           else if (m.type === "scan_result") {
+            clearTimeout(scanTimeoutTimer);
             const btn = document.getElementById("btnScanBms");
-            if (btn) btn.innerText = "Quét Tìm Mạch JK BMS";
+            if (btn) {
+              btn.innerText = "Quét Tìm Mạch JK BMS";
+              btn.disabled = false;
+            }
             const el = document.getElementById("deviceList");
             if (el) {
               el.innerHTML = "";
+              if (!m.devices || m.devices.length === 0) {
+                el.innerHTML = "<p style='color:#ff4757; font-size:0.85rem; text-align:center;'>Không tìm thấy thiết bị nào xung quanh!</p>";
+                return;
+              }
               m.devices.forEach(d => {
                 el.innerHTML += `<div class="dev-item">
                   <div><b>${d.name}</b><br><small style="color:var(--text-dim)">${d.mac} (${d.rssi}dBm)</small></div>
@@ -562,18 +575,38 @@ let rxBuf = "";
 
     function saveTvMac() {
       const val = document.getElementById("tvMac").value.trim();
+      if (val.length < 17) {
+        alert("Vui lòng nhập đủ 17 ký tự địa chỉ MAC (VD: 24:4C:AB:4F:B5:DC)!");
+        return;
+      }
       sendCmd({ action: "set_tv_mac", mac: val });
       alert("Đã lưu MAC Mini TV!");
     }
 
     function scanBms() {
-      document.getElementById("btnScanBms").innerText = "Đang quét BLE (5s)...";
+      const btn = document.getElementById("btnScanBms");
+      btn.innerText = "Đang quét BLE (5s)...";
+      btn.disabled = true;
+
+      const listEl = document.getElementById("deviceList");
+      if (listEl) listEl.innerHTML = "<p style='color:var(--text-dim); font-size:0.85rem; text-align:center;'>Đang tìm kiếm thiết bị xung quanh...</p>";
+
       sendCmd({ action: "scan_bms" });
+
+      clearTimeout(scanTimeoutTimer);
+      scanTimeoutTimer = setTimeout(() => {
+        btn.innerText = "Quét Tìm Mạch JK BMS";
+        btn.disabled = false;
+        if (listEl && listEl.innerHTML.includes("Đang tìm kiếm")) {
+          listEl.innerHTML = "<p style='color:#ff4757; font-size:0.85rem; text-align:center;'>Không nhận được phản hồi từ ESP32-C3. Vui lòng bấm quét lại!</p>";
+        }
+      }, 6500);
     }
 
     function selectBms(mac) {
       sendCmd({ action: "set_bms_mac", mac: mac });
       document.getElementById("curBms").innerText = mac;
+      alert("Đã kết nối và lưu BMS MAC: " + mac);
     }
   </script>
 </body>
